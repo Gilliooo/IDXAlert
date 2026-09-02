@@ -16,12 +16,41 @@ budget.
 
 ## Contents
 
+- [Building](#building)
 - [Setup](#setup) — the one-page guide
 - [How it works](#how-it-works)
 - [Two bugs worth reading about](#two-bugs-worth-reading-about)
 - [Testing](#testing)
-- [Building](#building)
 - [Project layout](#project-layout)
+
+---
+
+# Building
+
+```
+build3.bat        ->  dist\IDXAlert3.exe
+```
+
+Runs all seven suites first and refuses to build if any fail. Single file, no
+console.
+
+The .exe reads `config.json`, `seen.json`, `latency.csv` and `logs\` from **its
+own** folder, not from the source tree. Editing Options in the .exe does not
+change the source config, and vice versa; that two-config split caused duplicate
+notifications in different styles once. `build3.bat` will not overwrite an
+existing `dist\config.json`.
+
+Running from source instead:
+
+```
+pip install pystray pillow
+python idx3tray.py        the tray app
+python idx3.py            headless, alerts to console and today's log
+python idx3.py --plan     the tick schedule and request budget
+python idx3.py --probe    measure request latency per client
+python idx3.py --verify-feed
+python idx3.py --stats [PATH]
+```
 
 ---
 
@@ -286,34 +315,7 @@ whole chain with real filing titles and asserts on what reaches the dispatcher.
 
 ---
 
-# Building
 
-```
-build3.bat        ->  dist\IDXAlert3.exe
-```
-
-Runs all seven suites first and refuses to build if any fail. Single file, no
-console.
-
-The .exe reads `config.json`, `seen.json`, `latency.csv` and `logs\` from **its
-own** folder, not from the source tree. Editing Options in the .exe does not
-change the source config, and vice versa; that two-config split caused duplicate
-notifications in different styles once. `build3.bat` will not overwrite an
-existing `dist\config.json`.
-
-Running from source instead:
-
-```
-pip install pystray pillow
-python idx3tray.py        the tray app
-python idx3.py            headless, alerts to console and today's log
-python idx3.py --plan     the tick schedule and request budget
-python idx3.py --probe    measure request latency per client
-python idx3.py --verify-feed
-python idx3.py --stats [PATH]
-```
-
----
 
 # Project layout
 
