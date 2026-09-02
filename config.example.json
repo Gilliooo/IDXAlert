@@ -1,0 +1,74 @@
+{
+  "_comment": "IDXAlert. Keep this folder separate from any other copy - two watchers sharing one seen.json means duplicate alerts and twice the requests.",
+  "_comment_poll": "Absolute tick grid, anchored to IDX's clock. Bursts run from burst_lead_seconds BEFORE each :00/:30 until burst_window_seconds after. baseline_interval_seconds is the worst-case detection time for an off-cycle filing, so it is the number that has to stay well under 60.",
+  "poll": {
+    "burst_lead_seconds": 3.0,
+    "burst_window_seconds": 90.0,
+    "burst_interval_seconds": 1.0,
+    "baseline_interval_seconds": 22.0,
+    "prewarm_lead_seconds": 10.0,
+    "baseline_jitter_seconds": 0.4
+  },
+  "_comment_page": "IDX batches 4-27 filings at once. page_size must exceed a normal batch or we only see the newest few. If a page comes back saturated (nearly everything on it is new) the alert fires anyway and a second, larger fetch backfills the rest - correctness never delays the notification.",
+  "page_size": 30,
+  "escalate_page_size": 100,
+  "_comment_index_from": "indexFrom is a 0-based PAGE NUMBER, not a row offset. Leave it at 0 - any other value fetches an older page and alerts arrive late.",
+  "index_from": 0,
+  "_comment_freshness": "The feed's newest item should never be old during trading hours. If it is, something upstream changed (pagination, sort, a filter) and alerts are silently stale. Warn rather than fail quietly. 0 disables.",
+  "stale_feed_warn_minutes": 90,
+  "_comment_clients": "Tried in health order, fastest first. A 403 cools that client and falls through to the next one within the same tick, so a block costs milliseconds, not an alert. curl_cffi is optional (pip install curl_cffi).",
+  "clients": [
+    "keepalive",
+    "urllib",
+    "curl",
+    "curl_cffi"
+  ],
+  "request_timeout_seconds": 12.0,
+  "refusal_cooldown_seconds": 300.0,
+  "lang": "id",
+  "emiten_type": "*",
+  "data_dir": "",
+  "_comment_filters": "Empty watchlist = every listed company. exclude_keywords is left EMPTY by default on purpose: filtering changes what reaches the latency log. Add exclusions once the numbers are trusted.",
+  "watchlist": [],
+  "keywords": [],
+  "exclude_keywords": [],
+  "active_hours": {
+    "start": "00:00",
+    "end": "23:59",
+    "days": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  "_comment_channels": "The desktop popup is drawn by the tray app itself. Telegram and email are optional side channels and go out on the dispatcher thread, never the poll thread.",
+  "channels": {
+    "popup": {
+      "enabled": true,
+      "duration_seconds": 0,
+      "max_visible": 3
+    },
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": ""
+    },
+    "email": {
+      "enabled": false,
+      "smtp_host": "smtp.gmail.com",
+      "smtp_port": 587,
+      "username": "",
+      "password": "",
+      "to": []
+    }
+  },
+  "start_with_windows": true,
+  "latency_budget_seconds": 60.0,
+  "log_routine_checks": false,
+  "log_summary_minutes": 30,
+  "log_retention_days": 0
+}

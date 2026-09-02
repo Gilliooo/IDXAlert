@@ -1,0 +1,22 @@
+# Runtime state, written beside the app.
+# config.example.json is the tracked template; config.json is yours.
+config.json
+seen.json
+seen.json.tmp
+latency.csv
+latency.csv.*
+logs/
+.idx3_write_test
+
+# Build output
+build/
+dist/
+*.zip
+__pycache__/
+*.py[cod]
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

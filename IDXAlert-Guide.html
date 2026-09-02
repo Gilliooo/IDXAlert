@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IDXAlert setup</title>
+<style>
+  @page { size: A4; margin: 9mm 10mm 8mm 10mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0; font-family: "Segoe UI", -apple-system, Arial, sans-serif;
+    color: #16181d; font-size: 9.4pt; line-height: 1.42; background: #fff;
+  }
+  .hd { display: flex; align-items: center; gap: 11px; }
+  h1 { font-size: 19pt; margin: 0; letter-spacing: -0.4px; }
+  .sub { color: #6b7280; font-size: 9.8pt; }
+  .rule { height: 2px; background: #16181d; margin: 7px 0 0; }
+  .band {
+    font-size: 7.6pt; letter-spacing: 1.5px; text-transform: uppercase;
+    font-weight: 700; color: #1d7a4c; margin: 12px 0 6px;
+  }
+  .cols { display: flex; gap: 13px; align-items: flex-start; }
+  .stepttl { font-size: 10.2pt; font-weight: 700; margin: 0 0 3px; }
+  .stepttl .n {
+    display: inline-flex; width: 17px; height: 17px; border-radius: 50%;
+    background: #16181d; color: #fff; font-size: 8.4pt; align-items: center;
+    justify-content: center; margin-right: 6px; vertical-align: 1px;
+  }
+  .cap { color: #6b7280; font-size: 8.7pt; margin: 5px 0 0; }
+  code {
+    font-family: Consolas, monospace; font-size: 8.6pt;
+    background: #f1f2f4; padding: 1px 4px; border-radius: 3px;
+  }
+  .note {
+    background: #fdf6e8; border-left: 3px solid #e0b45c;
+    padding: 8px 11px; border-radius: 0 4px 4px 0; margin-top: 12px;
+  }
+  .note b { color: #8a6520; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 3px 8px 3px 0; vertical-align: top; font-size: 8.8pt; }
+  .k { white-space: nowrap; font-weight: 650; }
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <svg width="34" height="34" viewBox="0 0 64 64">
+    <rect x="2" y="2" width="60" height="60" rx="14" fill="#228B54"/>
+    <rect x="16" y="32" width="8" height="18" fill="#fff" opacity=".94"/>
+    <rect x="28" y="22" width="8" height="28" fill="#fff" opacity=".94"/>
+    <rect x="40" y="12" width="8" height="38" fill="#fff" opacity=".94"/>
+  </svg>
+  <div>
+    <h1>IDXAlert</h1>
+    <div class="sub">Alerts you when IDX publishes a disclosure from a company you cover.</div>
+  </div>
+</div>
+<div class="rule"></div>
+
+<div class="cols" style="margin-top:11px">
+
+  <!-- ─────────── 1. find it ─────────── -->
+  <div style="flex:1">
+    <p class="stepttl"><span class="n">1</span>Find it in the tray</p>
+    <svg viewBox="0 0 230 150" width="100%" role="img"
+         aria-label="The Windows tray flyout opened from the chevron beside the clock, with the green IDXAlert bar chart icon ringed in the top left of the icon grid.">
+      <!-- flyout -->
+      <rect x="25" y="4" width="180" height="92" rx="10" fill="#2f2f2f" stroke="#3f3f3f"/>
+      <!-- row 1 -->
+      <g>
+        <rect x="34" y="14" width="20" height="20" rx="5" fill="#228B54"/>
+        <rect x="38.5" y="24" width="2.6" height="6"   fill="#fff" opacity=".94"/>
+        <rect x="42.7" y="21.5" width="2.6" height="8.5" fill="#fff" opacity=".94"/>
+        <rect x="46.9" y="19" width="2.6" height="11"  fill="#fff" opacity=".94"/>
+        <rect x="66"  y="14" width="20" height="20" rx="5" fill="#e9e9e9"/>
+        <rect x="98"  y="14" width="20" height="20" rx="5" fill="#5a86d8"/>
+        <rect x="130" y="14" width="20" height="20" rx="5" fill="#3b78c4"/>
+        <circle cx="172" cy="24" r="9" fill="none" stroke="#4e8bd6" stroke-width="2.4"/>
+      </g>
+      <!-- row 2 -->
+      <g>
+        <rect x="34"  y="42" width="20" height="20" rx="5" fill="#2f6fd0"/>
+        <rect x="66"  y="42" width="20" height="20" rx="5" fill="#e4e4e4"/>
+        <rect x="98"  y="42" width="20" height="20" rx="5" fill="#8a5fd0"/>
+        <rect x="130" y="42" width="20" height="20" rx="5" fill="#3b78c4"/>
+        <rect x="162" y="42" width="20" height="20" rx="5" fill="#3aa66a"/>
+      </g>
+      <!-- row 3 -->
+      <rect x="34" y="70" width="20" height="20" rx="5" fill="#2f7fd8"/>
+
+      <!-- highlight ring on IDXAlert -->
+      <rect x="29" y="9" width="30" height="30" rx="9" fill="none"
+            stroke="#1d7a4c" stroke-width="2.4"/>
+
+      <!-- taskbar -->
+      <rect x="0" y="112" width="230" height="34" fill="#1b1b1b"/>
+      <path d="M40 126 l7 7 l7 -7" fill="none" stroke="#e6e6e6" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="76" cy="129" r="7.5" fill="#3d7fd6"/>
+      <path d="M98 133 a13 13 0 0 1 17 0"  fill="none" stroke="#e6e6e6" stroke-width="1.9"/>
+      <path d="M102.5 129.5 a8 8 0 0 1 8 0" fill="none" stroke="#e6e6e6" stroke-width="1.9"/>
+      <circle cx="106.5" cy="134.5" r="1.6" fill="#e6e6e6"/>
+      <path d="M130 125 l-5 4 h-3.5 v4 h3.5 l5 4 z" fill="#e6e6e6"/>
+      <path d="M134 127 l7 7 M141 127 l-7 7" stroke="#e6e6e6" stroke-width="1.7"
+            stroke-linecap="round"/>
+      <rect x="150" y="124.5" width="17" height="9.5" rx="2.5" fill="none"
+            stroke="#7ddc9a" stroke-width="1.8"/>
+      <rect x="152" y="126.5" width="9" height="5.5" fill="#7ddc9a"/>
+      <text x="224" y="126" font-family="Segoe UI, Arial" font-size="9" fill="#e6e6e6" text-anchor="end">10.48</text>
+      <text x="224" y="138" font-family="Segoe UI, Arial" font-size="9" fill="#e6e6e6" text-anchor="end">01/09/2026</text>
+
+      <!-- pointer from chevron to flyout -->
+      <path d="M47 122 L47 102" stroke="#1d7a4c" stroke-width="2" stroke-dasharray="3 3"/>
+      <path d="M47 96 l-4.5 7 h9 z" fill="#1d7a4c"/>
+    </svg>
+    <p class="cap">Click the chevron beside the clock. IDXAlert is the green bar chart.</p>
+  </div>
+
+  <!-- ─────────── 2. right-click ─────────── -->
+  <div style="flex:1">
+    <p class="stepttl"><span class="n">2</span>Right-click the icon</p>
+    <svg viewBox="0 0 230 222" width="100%" role="img"
+         aria-label="The right-click menu, with Verify feed and Options highlighted.">
+      <rect x="1" y="1" width="228" height="220" rx="8" fill="#fff" stroke="#d4d4d4"/>
+      <rect x="6" y="38" width="218" height="14" rx="3" fill="#eaf5ee"/>
+      <rect x="6" y="73" width="218" height="14" rx="3" fill="#eaf5ee"/>
+      <g font-family="Segoe UI, Arial" font-size="10.4" fill="#16181d">
+        <text x="18" y="21" font-weight="700">Check now</text>
+        <text x="18" y="35">Status</text>
+        <text x="18" y="49" font-weight="700" fill="#1d7a4c">Verify feed</text>
+        <text x="18" y="63">Send test notification</text>
+        <text x="18" y="84" font-weight="700" fill="#1d7a4c">Options...</text>
+        <text x="18" y="108">Pause</text>
+        <text x="18" y="132">Open today's log</text>
+        <text x="18" y="146">Open latency.csv</text>
+        <text x="18" y="160">Edit config.json by hand</text>
+        <text x="18" y="174">Open folder</text>
+        <text x="18" y="188">Open IDX page</text>
+        <text x="18" y="209">Quit</text>
+      </g>
+      <g stroke="#e4e4e4">
+        <line x1="10" y1="72" x2="220" y2="72"/>
+        <line x1="10" y1="96" x2="220" y2="96"/>
+        <line x1="10" y1="120" x2="220" y2="120"/>
+        <line x1="10" y1="197" x2="220" y2="197"/>
+      </g>
+    </svg>
+    <p class="cap"><b>Verify feed</b> once. It should say it is reading the
+      newest page. Then open <b>Options</b>.</p>
+  </div>
+
+  <!-- ─────────── 3. icon states ─────────── -->
+  <div style="flex:1">
+    <p class="stepttl"><span class="n">3</span>What the icon means</p>
+    <svg viewBox="0 0 230 214" width="100%" role="img"
+         aria-label="The tray icon in four colours: green running, amber paused, blue feed stale, red last check failed.">
+      <g font-family="Segoe UI, Arial">
+        <!-- green -->
+        <rect x="2" y="4" width="26" height="26" rx="7" fill="#228B54"/>
+        <rect x="8"    y="17" width="3.4" height="8"  fill="#fff" opacity=".94"/>
+        <rect x="13.4" y="14" width="3.4" height="11" fill="#fff" opacity=".94"/>
+        <rect x="18.8" y="10.5" width="3.4" height="14.5" fill="#fff" opacity=".94"/>
+        <text x="38" y="16" font-size="11" font-weight="700" fill="#16181d">Green</text>
+        <text x="38" y="30" font-size="10.5" fill="#3f444e">Running. Nothing to do.</text>
+
+        <!-- amber -->
+        <rect x="2" y="54" width="26" height="26" rx="7" fill="#BE8C14"/>
+        <rect x="8"    y="67" width="3.4" height="8"  fill="#fff" opacity=".94"/>
+        <rect x="13.4" y="64" width="3.4" height="11" fill="#fff" opacity=".94"/>
+        <rect x="18.8" y="60.5" width="3.4" height="14.5" fill="#fff" opacity=".94"/>
+        <text x="38" y="66" font-size="11" font-weight="700" fill="#16181d">Amber</text>
+        <text x="38" y="80" font-size="10.5" fill="#3f444e">Paused. Right-click, Resume.</text>
+
+        <!-- blue -->
+        <rect x="2" y="104" width="26" height="26" rx="7" fill="#2869BE"/>
+        <rect x="8"    y="117" width="3.4" height="8"  fill="#fff" opacity=".94"/>
+        <rect x="13.4" y="114" width="3.4" height="11" fill="#fff" opacity=".94"/>
+        <rect x="18.8" y="110.5" width="3.4" height="14.5" fill="#fff" opacity=".94"/>
+        <text x="38" y="116" font-size="11" font-weight="700" fill="#16181d">Blue</text>
+        <text x="38" y="130" font-size="10.5" fill="#3f444e">Feed looks stale.</text>
+        <text x="38" y="144" font-size="10.5" fill="#3f444e">Right-click, Verify feed.</text>
+
+        <!-- red -->
+        <rect x="2" y="164" width="26" height="26" rx="7" fill="#B02A2A"/>
+        <rect x="8"    y="177" width="3.4" height="8"  fill="#fff" opacity=".94"/>
+        <rect x="13.4" y="174" width="3.4" height="11" fill="#fff" opacity=".94"/>
+        <rect x="18.8" y="170.5" width="3.4" height="14.5" fill="#fff" opacity=".94"/>
+        <text x="38" y="176" font-size="11" font-weight="700" fill="#16181d">Red</text>
+        <text x="38" y="190" font-size="10.5" fill="#3f444e">Last check failed.</text>
+        <text x="38" y="204" font-size="10.5" fill="#3f444e">Right-click, Status.</text>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<div class="band">Options, Filters tab. Type your tickers, tick four boxes, Save.</div>
+
+<svg viewBox="0 0 700 282" width="100%" role="img"
+     aria-label="The Filters tab filled in: a bank ticker list in Only these tickers, Title must contain left empty, four of six Never alert on boxes ticked, and a phrase typed into Also exclude.">
+  <g font-family="Segoe UI, Arial">
+    <rect x="0.5" y="0.5" width="470" height="281" rx="5" fill="#fff" stroke="#c9ccd2"/>
+    <rect x="0.5" y="0.5" width="470" height="26" rx="5" fill="#f2f3f5"/>
+    <rect x="0.5" y="20" width="470" height="7" fill="#f2f3f5"/>
+    <text x="13" y="18" font-size="11" font-weight="650" fill="#3f444e">IDXAlert 3.0, Options</text>
+    <g font-size="10" fill="#6b7280">
+      <text x="16" y="43">Speed</text><text x="56" y="43">Alerts</text>
+      <rect x="90" y="31" width="42" height="17" rx="3" fill="#fff" stroke="#c9ccd2"/>
+      <text x="96" y="43" fill="#16181d" font-weight="700">Filters</text>
+      <text x="140" y="43">Schedule</text><text x="192" y="43">Files</text>
+      <text x="222" y="43">Phone / Email</text><text x="292" y="43">Advanced</text>
+    </g>
+    <line x1="8" y1="50" x2="462" y2="50" stroke="#e4e6ea"/>
+
+    <text x="16" y="70" font-size="10.5" fill="#16181d">Only these tickers</text>
+    <rect x="120" y="57" width="336" height="19" rx="2" fill="#fff" stroke="#9aa0aa"/>
+    <text x="127" y="70" font-size="9.5" font-family="Consolas, monospace" fill="#16181d">BBCA, BBRI, BMRI, BBNI, BRIS, BTPS, ARTO</text>
+    <text x="120" y="87" font-size="9" fill="#9aa0aa">comma separated. empty = every company on IDX</text>
+
+    <text x="16" y="107" font-size="10.5" fill="#16181d">Title must contain</text>
+    <rect x="120" y="94" width="336" height="19" rx="2" fill="#fff" stroke="#9aa0aa"/>
+    <text x="120" y="124" font-size="9" fill="#9aa0aa">leave empty. you want everything these names file</text>
+
+    <line x1="16" y1="135" x2="456" y2="135" stroke="#e4e6ea"/>
+
+    <text x="16" y="154" font-size="10.5" fill="#16181d">Never alert on</text>
+    <g font-size="10">
+      <rect x="120" y="145" width="10" height="10" rx="2" fill="#1d7a4c"/>
+      <path d="M122.2 150 l2.2 2.2 l3.6 -3.9" stroke="#fff" stroke-width="1.6" fill="none"/>
+      <text x="136" y="154" fill="#16181d">Structured Warrant</text>
+
+      <rect x="120" y="160" width="10" height="10" rx="2" fill="#1d7a4c"/>
+      <path d="M122.2 165 l2.2 2.2 l3.6 -3.9" stroke="#fff" stroke-width="1.6" fill="none"/>
+      <text x="136" y="169" fill="#16181d">Laporan Kepemilikan</text>
+
+      <rect x="120" y="175" width="10" height="10" rx="2" fill="#1d7a4c"/>
+      <path d="M122.2 180 l2.2 2.2 l3.6 -3.9" stroke="#fff" stroke-width="1.6" fill="none"/>
+      <text x="136" y="184" fill="#16181d">Bukti Iklan</text>
+
+      <rect x="120" y="190" width="10" height="10" rx="2" fill="#fff" stroke="#9aa0aa"/>
+      <text x="136" y="199" fill="#16181d">Obligasi / Sukuk</text>
+
+      <rect x="120" y="205" width="10" height="10" rx="2" fill="#1d7a4c"/>
+      <path d="M122.2 210 l2.2 2.2 l3.6 -3.9" stroke="#fff" stroke-width="1.6" fill="none"/>
+      <text x="136" y="214" fill="#16181d">ETF daily NAV</text>
+
+      <rect x="120" y="220" width="10" height="10" rx="2" fill="#fff" stroke="#9aa0aa"/>
+      <text x="136" y="229" fill="#16181d">Penghentian Sementara</text>
+    </g>
+
+    <text x="16" y="254" font-size="10.5" fill="#16181d">Also exclude</text>
+    <rect x="120" y="241" width="336" height="19" rx="2" fill="#fff" stroke="#9aa0aa"/>
+    <text x="127" y="254" font-size="9.5" font-family="Consolas, monospace" fill="#16181d">Laporan Bulanan Registrasi</text>
+    <text x="120" y="272" font-size="9" fill="#9aa0aa">comma separated. optional</text>
+
+    <g font-family="Segoe UI, Arial">
+      <line x1="462" y1="66" x2="492" y2="66" stroke="#c9ccd2" stroke-width="1.2"/>
+      <text x="500" y="62" font-size="11" font-weight="700" fill="#16181d">Your coverage</text>
+      <text x="500" y="76" font-size="10.5" fill="#3f444e">Coal desk instead:</text>
+      <text x="500" y="90"  font-size="9.5" font-family="Consolas, monospace" fill="#16181d">ADRO, ITMG, PTBA,</text>
+      <text x="500" y="103" font-size="9.5" font-family="Consolas, monospace" fill="#16181d">HRUM, INCO, ANTM,</text>
+      <text x="500" y="116" font-size="9.5" font-family="Consolas, monospace" fill="#16181d">MDKA, TINS</text>
+
+      <text x="500" y="140" font-size="11" font-weight="700" fill="#16181d">Not case sensitive</text>
+      <text x="500" y="154" font-size="10.5" fill="#3f444e">Matches inside words, so</text>
+      <text x="500" y="168" font-size="10.5" fill="#3f444e">excluding RUPS also kills</text>
+      <text x="500" y="182" font-size="10.5" fill="#3f444e">RUPST. Use long phrases.</text>
+
+      <line x1="462" y1="188" x2="492" y2="188" stroke="#c9ccd2" stroke-width="1.2"/>
+      <text x="500" y="200" font-size="11" font-weight="700" fill="#1d7a4c">These four cut about a third</text>
+      <text x="500" y="214" font-size="10.5" fill="#3f444e">of the feed. Leave the last two</text>
+      <text x="500" y="228" font-size="10.5" fill="#3f444e">off: bonds and suspensions are news.</text>
+
+      <line x1="462" y1="250" x2="492" y2="250" stroke="#c9ccd2" stroke-width="1.2"/>
+      <text x="500" y="248" font-size="11" font-weight="700" fill="#16181d">Anything else you keep seeing</text>
+      <text x="500" y="262" font-size="10.5" fill="#3f444e">Copy the wording out of the popup</text>
+      <text x="500" y="276" font-size="10.5" fill="#3f444e">so it matches exactly.</text>
+    </g>
+  </g>
+</svg>
+
+<p class="cap" style="margin-top:6px">
+  Then the <b>Schedule</b> tab, tick <b>Start automatically when I log in</b>.
+  Settings save instantly, no restart.
+</p>
+
+<div class="cols" style="margin-top:12px">
+  <div style="flex:1.1">
+    <div class="band" style="margin-top:0">When it fires</div>
+    <svg viewBox="0 0 340 116" width="100%" role="img"
+         aria-label="The alert popup, a dark window with a green border listing two disclosures.">
+      <g font-family="Segoe UI, Arial">
+        <rect x="1" y="1" width="338" height="114" rx="5" fill="#1f2430" stroke="#2f9e5e" stroke-width="2"/>
+        <text x="14" y="24" font-size="12" font-weight="700" fill="#7ee2a8">IDX: 2 new disclosures</text>
+        <text x="326" y="25" font-size="13" fill="#8b93a1" text-anchor="end">✕</text>
+        <rect x="12" y="32" width="316" height="38" rx="4" fill="#2b3a30"/>
+        <text x="22" y="47" font-size="10.5" font-weight="700" fill="#7ee2a8">BBCA</text>
+        <text x="58" y="47" font-size="9.5" fill="#8b93a1">19:13</text>
+        <text x="318" y="47" font-size="9.5" font-weight="700" fill="#7ee2a8" text-anchor="end">3 files ▾</text>
+        <text x="22" y="63" font-size="10" fill="#e8ecf1">Penyampaian Laporan Keuangan</text>
+        <rect x="12" y="74" width="316" height="28" rx="4" fill="#252b3a"/>
+        <text x="22" y="92" font-size="10.5" font-weight="700" fill="#7ee2a8">BBRI</text>
+        <text x="58" y="92" font-size="9.5" fill="#8b93a1">19:04</text>
+      </g>
+    </svg>
+    <table style="margin-top:5px">
+      <tr><td class="k">Left-click a row</td><td>opens the PDF. The window stays open.</td></tr>
+      <tr><td class="k">Right-click or ✕</td><td>closes it. It never closes by itself.</td></tr>
+      <tr><td class="k">Several files</td><td>click to pick one, or Open all.</td></tr>
+    </table>
+  </div>
+
+  <div style="flex:1">
+    <div class="band" style="margin-top:0">If it goes wrong</div>
+    <table>
+      <tr><td class="k">No alerts</td><td>Filters too tight. Empty both boxes, confirm alerts start, then add back one at a time.</td></tr>
+      <tr><td class="k">Too many</td><td>Tick the four boxes. Narrow your ticker list.</td></tr>
+      <tr><td class="k">Red icon</td><td>Usually the VPN. Try it off.</td></tr>
+      <tr><td class="k">Double alerts</td><td>Two copies running. Quit both, start one.</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="note">
+  <b>The one thing to know.</b> The time on each row is <b>when the company filed</b>,
+  not when you were told. IDX publishes in batches on the hour and half hour, about
+  18 minutes after filing. IDXAlert reaches you under a minute after that. A row
+  showing 19:13 at 19:30 is working correctly.
+</div>
+
+</body>
+</html>
