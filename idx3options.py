@@ -18,6 +18,7 @@ the same screen, not in a log file a day later.
 import json
 import os
 import re
+import time
 
 import idx3
 import idx3sched
@@ -280,6 +281,14 @@ def apply_values(cfg, v):
 
 
 def save(path, v):
+    """Read-modify-write config.json atomically.
+
+    The watcher re-reads this file on every tick, and on Windows a rename over
+    a file another process has open fails with a sharing violation. That window
+    is only milliseconds wide, but it lands on a save now and then, so retry
+    briefly rather than losing the edit. Anything still failing after that is
+    raised - a save that does not happen must not look like one that did.
+    """
     try:
         with open(path, encoding="utf-8") as fh:
             cfg = json.load(fh)
@@ -289,8 +298,21 @@ def save(path, v):
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(cfg, fh, indent=2, ensure_ascii=False)
-    os.replace(tmp, path)
-    return cfg
+        fh.flush()
+        os.fsync(fh.fileno())
+    last = None
+    for attempt in range(12):
+        try:
+            os.replace(tmp, path)
+            return cfg
+        except OSError as exc:
+            last = exc
+            time.sleep(0.05)
+    try:
+        os.remove(tmp)
+    except OSError:
+        pass
+    raise last
 
 
 # ------------------------------------------------------------------- the window
@@ -341,6 +363,16 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
 
     nb = ttk.Notebook(root)
     nb.pack(side="top", fill="both", expand=True, padx=10, pady=(10, 0))
+
+    # EVERY tk variable below passes master=root, and that is load-bearing.
+    # A tk variable created without one attaches itself to tkinter's default
+    # root, which is whichever Tk interpreter was created first in the process.
+    # The alert popup builds its own Tk on its own thread and - with
+    # duration_seconds 0 - keeps it alive until the user dismisses it, so it
+    # usually gets there first. The Entry then reads and writes a variable of
+    # the same name inside THIS interpreter while var.get() reads the popup's,
+    # so the form opens blank and Save writes back the values already on disk:
+    # every edit silently discarded. Binding the variables to root is the fix.
     V = {}
     MUTED = "#6b7280"
 
@@ -363,23 +395,23 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
     ttk.Label(p, text="How hard to poll around IDX's :00 / :30 batches",
               font=("Segoe UI", 9, "bold")).grid(row=0, column=0, columnspan=2,
                                                  sticky="w", pady=(0, 8))
-    V["burst_interval"] = tk.DoubleVar(value=v["burst_interval"])
+    V["burst_interval"] = tk.DoubleVar(master=root, value=v["burst_interval"])
     row(p, 1, "Burst every (s)",
         ttk.Spinbox(p, from_=0.2, to=60, increment=0.5,
                     textvariable=V["burst_interval"]),
         "keep this above the time one check takes, or checks pile up")
-    V["burst_window"] = tk.DoubleVar(value=v["burst_window"])
+    V["burst_window"] = tk.DoubleVar(master=root, value=v["burst_window"])
     row(p, 3, "Burst lasts (s)",
         ttk.Spinbox(p, from_=0, to=900, increment=10,
                     textvariable=V["burst_window"]),
         "how long to stay fast after each :00 / :30")
-    V["baseline"] = tk.DoubleVar(value=v["baseline"])
+    V["baseline"] = tk.DoubleVar(master=root, value=v["baseline"])
     row(p, 5, "Otherwise every (s)",
         ttk.Spinbox(p, from_=1, to=3600, increment=1,
                     textvariable=V["baseline"]),
         "THE number that matters: an off-cycle filing takes at most this long "
         "to spot")
-    V["budget"] = tk.DoubleVar(value=v["budget"])
+    V["budget"] = tk.DoubleVar(master=root, value=v["budget"])
     row(p, 7, "Alert budget (s)",
         ttk.Spinbox(p, from_=5, to=3600, increment=5, textvariable=V["budget"]),
         "anything slower than this is flagged in the log and in --stats")
@@ -417,15 +449,15 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
 
     # ---------------------------------------------------------- Notifications
     p = page("Alerts")
-    V["popup_on"] = tk.BooleanVar(value=v["popup_on"])
+    V["popup_on"] = tk.BooleanVar(master=root, value=v["popup_on"])
     ttk.Checkbutton(p, text="Show the desktop popup",
                     variable=V["popup_on"]).grid(row=0, column=0, columnspan=2,
                                                  sticky="w", pady=(0, 8))
-    V["duration"] = tk.IntVar(value=v["duration"])
+    V["duration"] = tk.IntVar(master=root, value=v["duration"])
     row(p, 1, "Seconds on screen",
         ttk.Spinbox(p, from_=0, to=300, textvariable=V["duration"]),
         "0 = stays until you close it with the X or a right-click")
-    V["max_visible"] = tk.IntVar(value=v["max_visible"])
+    V["max_visible"] = tk.IntVar(master=root, value=v["max_visible"])
     row(p, 3, "Rows visible",
         ttk.Spinbox(p, from_=1, to=20, textvariable=V["max_visible"]),
         "more than this and the list scrolls; new alerts merge into the window "
@@ -442,10 +474,10 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
 
     # ---------------------------------------------------------- Filters
     p = page("Filters")
-    V["watchlist"] = tk.StringVar(value=v["watchlist"])
+    V["watchlist"] = tk.StringVar(master=root, value=v["watchlist"])
     row(p, 0, "Only these tickers", ttk.Entry(p, textvariable=V["watchlist"]),
         "comma separated, e.g. BBCA, TAPG. Empty = every company")
-    V["keywords"] = tk.StringVar(value=v["keywords"])
+    V["keywords"] = tk.StringVar(master=root, value=v["keywords"])
     row(p, 2, "Title must contain", ttk.Entry(p, textvariable=V["keywords"]),
         "empty = any title, e.g. Laporan Keuangan, RUPS, Dividen")
     ttk.Separator(p, orient="horizontal").grid(row=4, column=0, columnspan=2,
@@ -455,33 +487,33 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
     box.grid(row=5, column=1, sticky="ew", padx=(10, 0))
     V["exclude_presets"] = {}
     for i, (label, keyword, why) in enumerate(EXCLUDE_PRESETS):
-        var = tk.BooleanVar(value=keyword in v["exclude_presets"])
+        var = tk.BooleanVar(master=root, value=keyword in v["exclude_presets"])
         V["exclude_presets"][keyword] = var
         ttk.Checkbutton(box, text=label, variable=var).grid(row=i, column=0,
                                                             sticky="w")
         ttk.Label(box, text=why, foreground=MUTED, font=("Segoe UI", 8)).grid(
             row=i, column=1, sticky="w", padx=(8, 0))
-    V["exclude"] = tk.StringVar(value=v["exclude"])
+    V["exclude"] = tk.StringVar(master=root, value=v["exclude"])
     row(p, 6, "Also exclude", ttk.Entry(p, textvariable=V["exclude"]),
         "anything else, comma separated")
 
     # ---------------------------------------------------------- Schedule
     p = page("Schedule")
-    V["start"] = tk.StringVar(value=v["start"])
+    V["start"] = tk.StringVar(master=root, value=v["start"])
     row(p, 0, "Active from", ttk.Entry(p, textvariable=V["start"]), "HH:MM")
-    V["end"] = tk.StringVar(value=v["end"])
+    V["end"] = tk.StringVar(master=root, value=v["end"])
     row(p, 2, "Active until", ttk.Entry(p, textvariable=V["end"]), "HH:MM")
     ttk.Label(p, text="Days").grid(row=4, column=0, sticky="nw", pady=(8, 0))
     dayf = ttk.Frame(p)
     dayf.grid(row=4, column=1, sticky="w", padx=(10, 0), pady=(8, 0))
     V["days"] = {}
     for i, d in enumerate(DAYS):
-        V["days"][i] = tk.BooleanVar(value=i in v["days"])
+        V["days"][i] = tk.BooleanVar(master=root, value=i in v["days"])
         ttk.Checkbutton(dayf, text=d, variable=V["days"][i]).grid(
             row=0, column=i, padx=(0, 4))
     ttk.Separator(p, orient="horizontal").grid(row=6, column=0, columnspan=2,
                                                sticky="ew", pady=(16, 8))
-    V["startup"] = tk.BooleanVar(value=idx3startup.is_enabled() or v["startup"])
+    V["startup"] = tk.BooleanVar(master=root, value=idx3startup.is_enabled() or v["startup"])
     ttk.Checkbutton(p, text="Start automatically when I log in",
                     variable=V["startup"]).grid(row=7, column=0, columnspan=2,
                                                 sticky="w")
@@ -492,7 +524,7 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
 
     # ---------------------------------------------------------- Files
     p = page("Files")
-    V["data_dir"] = tk.StringVar(value=v["data_dir"])
+    V["data_dir"] = tk.StringVar(master=root, value=v["data_dir"])
     ttk.Label(p, text="Data folder  (logs and latency.csv go here)").grid(
         row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
     ttk.Entry(p, textvariable=V["data_dir"]).grid(row=1, column=0, columnspan=2,
@@ -522,7 +554,7 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
     ttk.Button(btns, text="Browse...", command=browse).pack(side="left")
     ttk.Button(btns, text="Open folder", command=open_data_folder).pack(
         side="left", padx=6)
-    V["retention"] = tk.IntVar(value=v["retention"])
+    V["retention"] = tk.IntVar(master=root, value=v["retention"])
     ttk.Label(p, text="Delete logs older than (days)").grid(row=5, column=0,
                                                             sticky="w",
                                                             pady=(14, 0))
@@ -531,7 +563,7 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
     ttk.Label(p, text="0 = never delete anything (default)", foreground=MUTED,
               font=("Segoe UI", 8)).grid(row=6, column=0, columnspan=2,
                                          sticky="w")
-    V["verbose"] = tk.BooleanVar(value=v["verbose"])
+    V["verbose"] = tk.BooleanVar(master=root, value=v["verbose"])
     ttk.Checkbutton(p, text="Log every check, not just real events",
                     variable=V["verbose"]).grid(row=7, column=0, columnspan=2,
                                                 sticky="w", pady=(10, 0))
@@ -546,50 +578,50 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
 
     # ---------------------------------------------------------- Phone / Email
     p = page("Phone / Email")
-    V["tg_on"] = tk.BooleanVar(value=v["tg_on"])
+    V["tg_on"] = tk.BooleanVar(master=root, value=v["tg_on"])
     ttk.Checkbutton(p, text="Send to Telegram", variable=V["tg_on"]).grid(
         row=0, column=0, columnspan=2, sticky="w")
-    V["tg_token"] = tk.StringVar(value=v["tg_token"])
+    V["tg_token"] = tk.StringVar(master=root, value=v["tg_token"])
     row(p, 1, "Bot token", ttk.Entry(p, textvariable=V["tg_token"]),
         "from @BotFather")
-    V["tg_chat"] = tk.StringVar(value=v["tg_chat"])
+    V["tg_chat"] = tk.StringVar(master=root, value=v["tg_chat"])
     row(p, 3, "Chat id", ttk.Entry(p, textvariable=V["tg_chat"]),
         "api.telegram.org/bot<TOKEN>/getUpdates")
     ttk.Separator(p, orient="horizontal").grid(row=5, column=0, columnspan=2,
                                                sticky="ew", pady=10)
-    V["em_on"] = tk.BooleanVar(value=v["em_on"])
+    V["em_on"] = tk.BooleanVar(master=root, value=v["em_on"])
     ttk.Checkbutton(p, text="Send email", variable=V["em_on"]).grid(
         row=6, column=0, columnspan=2, sticky="w")
-    V["em_host"] = tk.StringVar(value=v["em_host"])
+    V["em_host"] = tk.StringVar(master=root, value=v["em_host"])
     row(p, 7, "SMTP host", ttk.Entry(p, textvariable=V["em_host"]))
-    V["em_port"] = tk.IntVar(value=v["em_port"])
+    V["em_port"] = tk.IntVar(master=root, value=v["em_port"])
     row(p, 8, "Port", ttk.Spinbox(p, from_=1, to=65535, textvariable=V["em_port"]))
-    V["em_user"] = tk.StringVar(value=v["em_user"])
+    V["em_user"] = tk.StringVar(master=root, value=v["em_user"])
     row(p, 9, "Username", ttk.Entry(p, textvariable=V["em_user"]))
-    V["em_pass"] = tk.StringVar(value=v["em_pass"])
+    V["em_pass"] = tk.StringVar(master=root, value=v["em_pass"])
     row(p, 10, "App password", ttk.Entry(p, textvariable=V["em_pass"], show="*"))
-    V["em_to"] = tk.StringVar(value=v["em_to"])
+    V["em_to"] = tk.StringVar(master=root, value=v["em_to"])
     row(p, 11, "Send to", ttk.Entry(p, textvariable=V["em_to"]), "comma separated")
 
     # ---------------------------------------------------------- Advanced
     p = page("Advanced")
-    V["page_size"] = tk.IntVar(value=v["page_size"])
+    V["page_size"] = tk.IntVar(master=root, value=v["page_size"])
     row(p, 0, "Items per fetch",
         ttk.Spinbox(p, from_=1, to=500, textvariable=V["page_size"]),
         "must exceed a normal batch - IDX publishes up to 27 at once")
-    V["index_from"] = tk.IntVar(value=v["index_from"])
+    V["index_from"] = tk.IntVar(master=root, value=v["index_from"])
     row(p, 2, "indexFrom", ttk.Spinbox(p, from_=0, to=50,
                                        textvariable=V["index_from"]),
         "Leave at 0. This is a page number, not a row offset - any other value "
         "fetches an older page and alerts arrive late.")
-    V["stale_warn"] = tk.IntVar(value=v["stale_warn"])
+    V["stale_warn"] = tk.IntVar(master=root, value=v["stale_warn"])
     row(p, 4, "Warn if feed older than (min)",
         ttk.Spinbox(p, from_=0, to=1440, textvariable=V["stale_warn"]),
         "a healthy feed's newest item is never old; 0 disables the check")
-    V["timeout"] = tk.DoubleVar(value=v["timeout"])
+    V["timeout"] = tk.DoubleVar(master=root, value=v["timeout"])
     row(p, 6, "Request timeout (s)",
         ttk.Spinbox(p, from_=2, to=120, increment=1, textvariable=V["timeout"]))
-    V["cooldown"] = tk.DoubleVar(value=v["cooldown"])
+    V["cooldown"] = tk.DoubleVar(master=root, value=v["cooldown"])
     row(p, 8, "Cool a refused client for (s)",
         ttk.Spinbox(p, from_=10, to=3600, increment=30,
                     textvariable=V["cooldown"]),
@@ -601,15 +633,15 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
     cbox.grid(row=10, column=1, sticky="w", padx=(10, 0), pady=(10, 0))
     V["clients"] = {}
     for i, name in enumerate(ALL_CLIENTS):
-        var = tk.BooleanVar(value=name in v["clients"])
+        var = tk.BooleanVar(master=root, value=name in v["clients"])
         V["clients"][name] = var
         ttk.Checkbutton(cbox, text=name, variable=var).grid(row=i, column=0,
                                                             sticky="w")
-    V["burst_lead"] = tk.DoubleVar(value=v["burst_lead"])
+    V["burst_lead"] = tk.DoubleVar(master=root, value=v["burst_lead"])
     row(p, 12, "Start burst before :00/:30 (s)",
         ttk.Spinbox(p, from_=0, to=60, increment=1,
                     textvariable=V["burst_lead"]))
-    V["prewarm_lead"] = tk.DoubleVar(value=v["prewarm_lead"])
+    V["prewarm_lead"] = tk.DoubleVar(master=root, value=v["prewarm_lead"])
     row(p, 14, "Pre-warm socket before (s)",
         ttk.Spinbox(p, from_=1, to=120, increment=1,
                     textvariable=V["prewarm_lead"]),
@@ -645,14 +677,31 @@ def open_window(config_path, on_saved=None, on_test=None, on_verify=None):
         root.destroy()
 
     def do_save(close=True):
-        vals = collect()
-        problems = validate(vals)
+        # A blank spinbox makes DoubleVar.get() raise, and a Tk callback that
+        # raises prints to a stderr nobody is reading in a windowed build - the
+        # button just looks dead. Say what went wrong instead.
+        try:
+            vals = collect()
+            problems = validate(vals)
+        except Exception as exc:
+            messagebox.showerror("Check these",
+                                 "One of the boxes is empty or not a number "
+                                 "(%s)." % exc, parent=root)
+            return
         if problems:
             messagebox.showerror("Check these",
                                  "\n".join("- " + p for p in problems),
                                  parent=root)
             return
-        save(config_path, vals)
+        try:
+            save(config_path, vals)
+        except Exception as exc:
+            idx3.log("could not save settings: %s" % exc)
+            messagebox.showerror(
+                "Not saved",
+                "Your settings could NOT be written to:\n%s\n\n%s"
+                % (config_path, exc), parent=root)
+            return
         if idx3startup.supported():
             want = bool(vals.get("startup"))
             if want != idx3startup.is_enabled():

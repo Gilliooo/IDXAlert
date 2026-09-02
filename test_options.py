@@ -151,6 +151,31 @@ def main():
           and not idx3.matches({"ticker": "ZZZZ", "title": "Laporan"},
                                merged_cfg))
 
+    # --- a save that did not happen must not look like one that did -----
+    stubborn = os.path.join(tmp, "stubborn.json")
+    with open(stubborn, "w", encoding="utf-8") as fh:
+        json.dump(idx3.DEFAULT_CONFIG, fh)
+    real_replace, tries = os.replace, {"n": 0}
+
+    def always_busy(src, dst):
+        tries["n"] += 1
+        raise OSError(32, "being used by another process")
+
+    os.replace = always_busy
+    try:
+        O.save(stubborn, changed)
+        raised = False
+    except OSError:
+        raised = True
+    finally:
+        os.replace = real_replace
+    check("a config.json that cannot be replaced raises, it does not "
+          "report success", raised)
+    check("and it retried first rather than giving up on one collision",
+          tries["n"] > 1, tries["n"])
+    check("no .tmp litter is left behind when the save fails",
+          not os.path.exists(stubborn + ".tmp"))
+
     import shutil
     shutil.rmtree(tmp, ignore_errors=True)
     print("\n%d checks failed" % len(failures) if failures else "\nall checks passed")

@@ -23,13 +23,16 @@ Run:  python test_window.py
 import sys
 import types
 
-CREATED = {"widgets": [], "buttons": {}, "labels": [], "links": []}
+CREATED = {"widgets": [], "buttons": {}, "labels": [], "links": [],
+           "vars": []}
 
 
 class FakeVar:
     def __init__(self, value=None, **kw):
         self._v = value
         self._cbs = []
+        self.master = kw.get("master")
+        CREATED["vars"].append(self)
     def get(self):
         return self._v
     def set(self, v):
@@ -194,6 +197,24 @@ def main():
               "buttons can never be pushed off-screen",
               order(bottom[0]) < order(expanding[0]),
               (order(bottom[0]), order(expanding[0])))
+
+    # --- the discarded-edits bug ----------------------------------------
+    # A tk variable built without master= attaches to whichever Tk interpreter
+    # was created first in the process. The alert popup makes its own Tk and,
+    # at duration 0, keeps it alive, so it often wins - and then the Entry the
+    # user types into and the variable Save reads are two different Tcl
+    # variables in two different interpreters. The window looks normal and
+    # every edit is dropped. Nothing but an explicit master prevents this.
+    roots = [w for w in CREATED["widgets"] if w.parent is None]
+    root_w = roots[0] if roots else None
+    orphans = [v for v in CREATED["vars"] if v.master is None]
+    check("every form variable is bound to an explicit master",
+          CREATED["vars"] and not orphans,
+          "%d of %d have none" % (len(orphans), len(CREATED["vars"])))
+    check("they are bound to THIS window's root, not the default one",
+          root_w is not None
+          and all(v.master is root_w for v in CREATED["vars"]),
+          len({id(v.master) for v in CREATED["vars"]}))
 
     for wanted in ("About", "Save", "Cancel", "Apply"):
         check("the %r button exists" % wanted, wanted in CREATED["buttons"],

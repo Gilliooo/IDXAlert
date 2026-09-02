@@ -865,6 +865,12 @@ class Watcher:
                 # re-read config every tick so Options changes apply with no
                 # restart, exactly as 2.x did
                 self.cfg = load_config()
+                # load_config re-resolves data_dir, so seen.json and the log
+                # follow a folder change immediately. The recorder holds its
+                # path from construction, so it has to be told.
+                if self.recorder.path != LATENCY_PATH:
+                    log("latency log moved to %s" % LATENCY_PATH)
+                    self.recorder = idx3lat.Recorder(LATENCY_PATH)
             except Exception:
                 pass
 
