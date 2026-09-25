@@ -58,7 +58,7 @@ import idx3sched
 # the registry Run key, the mutex names) deliberately do NOT carry the version:
 # bumping them would orphan an existing autostart entry and let a second copy
 # run alongside the first.
-VERSION = "3.2"
+VERSION = "3.3"
 APP = "IDXAlert " + VERSION
 
 if getattr(sys, "frozen", False):
@@ -825,7 +825,7 @@ class Watcher:
         actually help; hammering turns a soft block into a hard one."""
         if self.consecutive_failures <= 0:
             return 0.0
-        return min(600.0, 5.0 * (2 ** min(self.consecutive_failures, 7)))
+        return min(3600.0, 5.0 * (2 ** min(self.consecutive_failures, 10)))  # cap 1h: a 10-min retry kept the Cloudflare block alive
 
     # ---------------------------------------------------------------- loop
 
